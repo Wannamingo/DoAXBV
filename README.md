@@ -44,11 +44,19 @@
 - Внутреннее разрешение 720 × 480 или 1440 × 960.
 - Перестановка A/B и X/Y в настройках управления.
 
-## Интерфейс
+## Скриншоты
 
-![Предпросмотр интерфейса Beach](docs/images/launcher-preview.png)
+**Волейбол**
 
-*Предпросмотр интерфейса лаунчера; не запись игрового процесса.*
+![Волейбольный матч в DOAXBV](docs/images/screenshots/volleyball.png)
+
+| Лаунчер Beach | Настройки |
+| --- | --- |
+| ![Главный экран лаунчера Beach](docs/images/screenshots/launcher.png) | ![Настройки изображения и управления](docs/images/screenshots/settings.png) |
+
+| Главное меню игры | Экранное управление |
+| --- | --- |
+| ![Главное меню Dead or Alive Xtreme Beach Volleyball](docs/images/screenshots/title-screen.png) | ![Главное меню с экранными кнопками](docs/images/screenshots/touch-controls.png) |
 
 ## Требования
 

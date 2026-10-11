@@ -44,11 +44,19 @@ The source consists of three layers: the **Beach interface**, the **ISO-import J
 - Internal rendering resolution of 720 × 480 or 1440 × 960.
 - Optional A/B and X/Y button swapping.
 
-## Interface
+## Screenshots
 
-![Beach launcher interface preview](docs/images/launcher-preview.png)
+**Volleyball**
 
-*Launcher interface preview, not gameplay footage.*
+![A volleyball match in DOAXBV](docs/images/screenshots/volleyball.png)
+
+| Beach launcher | Settings |
+| --- | --- |
+| ![Beach launcher home screen](docs/images/screenshots/launcher.png) | ![Display and control settings](docs/images/screenshots/settings.png) |
+
+| Game main menu | Touch controls |
+| --- | --- |
+| ![Dead or Alive Xtreme Beach Volleyball main menu](docs/images/screenshots/title-screen.png) | ![Main menu with touch controls](docs/images/screenshots/touch-controls.png) |
 
 ## Requirements
 
