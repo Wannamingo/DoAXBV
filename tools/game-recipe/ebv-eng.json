@@ -1,0 +1,30 @@
+{
+  "xbe_sha256": "492db2a81de48f707df69dbac2ef375c7d0ece1410ac8490cf58a18e54a56b8e",
+  "base_recipe_sha256": "50b4d69ac34bb2266a216e33423f47f97481a448bf7ddec8d372e376c9085f96",
+  "lifter_revision": "7adaf210a89814c5ca4444e4876fccb51b938878",
+  "program_manifest_sha256": "2d4e12ffe09cb56095a1ffdf2365987920b11bdf21c534b1a599a9b3201dd20c",
+  "ebp_overrides": 10824,
+  "translated": 16034,
+  "generated_files": {
+    "recomp_0000.c": "1b1e9f39cc3f094af40c55f0479a4c7554c6f4263779a33132bc0f08919f40a8",
+    "recomp_0001.c": "07b674c9d579b5a1bb8e5775b45e756dcde4df0467ee82c25975fa144efb0174",
+    "recomp_0002.c": "c069cacbd879415cb158ee7d52ecb02ba1a650483c1b00cc5e31c402344c92c8",
+    "recomp_0003.c": "c04c7eec7657ae0634a59ca43a3c46aa192f999fcc2b91e2aef3bcdd14ee5462",
+    "recomp_0004.c": "f24368c035036ecdd0562188488e8f890aa8a14fbb623081fc79fcad16c5b5fc",
+    "recomp_0005.c": "7716e78dc757166e9eb4ecf1b3bfbb06e321ae3157fe5b1b688aacc0d6f2f371",
+    "recomp_0006.c": "8591f0787409fafde2747e587eb2526e2982591772a1e471d78ae3ed226c4c6a",
+    "recomp_0007.c": "ee2b4940dd9220e79b6a69d64ddd613defaab1f5db2b0ebd9391cc9622152bc9",
+    "recomp_0008.c": "4166b8bab52eb7dd60fbedbf9f9c0fcab0b82adbecf1ba264a8995271fbd7c3b",
+    "recomp_0009.c": "30e298112ca8f4f2c298bcc6871eda35e1348e509ba9fa9d41da2349f3a96ab6",
+    "recomp_0010.c": "0c2bf4df0be3374a9ec303184302bc7b2a229288f73bfcfeb44f081ddffa87fd",
+    "recomp_0011.c": "6c78ddb319c88fc011830960c1877926640422f40e39b1a2350e2287ade4b793",
+    "recomp_0012.c": "18390cc276919b295fa30202808d2a96b18760e56bfcd3cc268223c7fd719e4a",
+    "recomp_0013.c": "16de641c0db4f522742ac04d846eea052d9493f5aaf404c570fe7e392e9a5b53",
+    "recomp_0014.c": "2a711f60b1e62cca9aa8f0d62a3216ba3331be2696b4702e6b21de9de6cc3e20",
+    "recomp_0015.c": "8b6cb3d774432957ccadb0220f35195f239265a14d16cb6645c06faeae1763f4",
+    "recomp_0016.c": "d55df43d03f923d67b3338f080e8ac39b542eb2dade7acb7e68f855b2434401d",
+    "recomp_dispatch.c": "96dd9af0ccef08d1a35e6b0f499899d13ea4b20576a5c45e77df91513ea58e48",
+    "recomp_funcs.h": "0b78901112cae8acbc55c4cac32fe2dbc2d337f5d3e38694ed3deb4f3515fe61",
+    "recomp_stubs_unresolved.c": "8b9a4502e0d80a56850df731dbbb1da6011a9af6a26a8d64ed2bd8af440d0453"
+  }
+}

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Keep the supplied 4:3 image unchanged; fit its logo in the icon safe area. -->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:insetLeft="3%" android:insetRight="3%"
+    android:insetTop="14.75%" android:insetBottom="14.75%">
+    <bitmap android:src="@drawable/app_logo" android:gravity="fill"
+        android:filter="true" />
+</inset>

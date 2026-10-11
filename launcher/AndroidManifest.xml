@@ -1,0 +1,13 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="org.doaxbv.port" android:versionCode="21" android:versionName="0.4.1-ru-USA6-Beach">
+    <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="35" />
+    <uses-feature android:glEsVersion="0x00030000" android:required="true" />
+    <uses-feature android:name="android.hardware.gamepad" android:required="false" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <application android:label="DOAXBV" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher" android:theme="@android:style/Theme.Material.NoActionBar" android:allowBackup="false" android:hasCode="true" android:extractNativeLibs="false" android:debuggable="true">
+        <activity android:name=".BeachLauncherActivity" android:exported="true" android:enableOnBackInvokedCallback="false" android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize|uiMode|density|fontScale">
+            <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+        </activity>
+        <activity android:name=".LauncherActivity" android:exported="false" />
+        <activity android:name=".GameActivity" android:exported="false" android:screenOrientation="sensorLandscape" android:launchMode="singleTask" android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize|uiMode|density|fontScale" android:process=":game" />
+    </application>
+</manifest>
