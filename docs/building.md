@@ -1,5 +1,36 @@
 # Build notes / Примечания к сборке
 
+## Current 0.4.2 packaging
+
+The native CMake project and authenticated USA5 recipe are unchanged in their
+input validation. Build `main`, `doaxbv_button_bindings_test`, and
+`doaxbv_live_display_test` with the toolchain below. The native build also needs
+local `ru_catalog.inc` and `ru_font.inc`; these original-game-dependent inputs
+are not published.
+
+`tools/package_android.py` recompiles `android/java/` and `launcher/java/`
+together, packages the current `private/build-arm64/libmain.so`, checks JNI
+exports, preserves disc identity/notices from the previous USA6 APK, includes
+Beach assets, and verifies the signing certificate and 16 KiB ZIP alignment.
+It requires a `private/build-arm64/build-receipt.json` containing the verified
+recipe, XBE, generated manifest, and native SHA-256 identities from the build.
+
+```text
+python tools/build_android.py --toolchains <toolchains> --game-dir <authenticated-generated-code> --localization <private-localization>
+python tools/verify_controls.py --toolchains <toolchains>
+python tools/package_android.py --toolchains <toolchains> --base-apk <previous-USA6-Beach.apk> --icon-resources <icon-resources-0.zip> <icon-resources-1.zip> --keystore <private-key.jks> --output <output-directory>
+```
+
+The icon resources are the original aapt2-compiled ZIPs. The preserved local
+development key uses alias `androiddebugkey`; do not commit it. Source from a
+clean clone alone is still insufficient to rebuild the full native game.
+
+`launcher/build_apk.py` now forwards to the current packaging script. The
+historical overlay-only packaging procedure below describes 0.4.1 only.
+
+## Historical 0.4.1 toolchain and packaging
+
+
 The APK combines the Beach launcher, USA6 Java ISO importer, and unchanged USA5 native core. See [source composition](source-status.md). A clean clone lacks the private inputs needed for a full native rebuild.
 
 APK состоит из Beach-лаунчера, Java-импортера ISO USA6 и неизменённого ядра USA5. Чистое клонирование не включает приватные входные данные для полной сборки ядра.
@@ -37,7 +68,7 @@ For the original public generation workflow and lifter dependencies, consult the
 
 ## Beach packaging
 
-`launcher/build_apk.py` retains the supplied packaging workflow, using `launcher/AndroidManifest.xml`, the Beach Java sources, and the bundled interface assets. It preserves the base APK's native libraries and original classes, adds the Beach DEX, aligns the APK for 16 KiB pages, and signs it. Paths are configured through environment variables:
+In 0.4.1, `launcher/build_apk.py` used `launcher/AndroidManifest.xml`, the Beach Java sources, and the bundled interface assets. It preserved the base APK's native libraries and original classes, added the Beach DEX, aligned the APK for 16 KiB pages, and signed it. This historical builder used environment variables:
 
 | Variable | Required value |
 | --- | --- |
@@ -49,4 +80,4 @@ For the original public generation workflow and lifter dependencies, consult the
 | `DOAXBV_OUTPUT_DIR` | Optional output directory; defaults to ignored `private/apk` |
 | `DOAXBV_BUILD_DIR` | Optional build directory; defaults to ignored `private/beach-build` |
 
-After preparing those local inputs, run `python launcher/build_apk.py`. The preserved builder expects the original development-key alias and passwords and verifies that the signing certificate matches the base APK. It is not a general release-signing tool. The ISO-import Java sources can be compiled with Java 17, Android API 35, and the SDL3 Android classes JAR; compiled classes themselves are not published.
+The 0.4.1 builder expected the original development-key alias and passwords and verified that the signing certificate matched the base APK. For 0.4.2, use the current CLI procedure at the top of this document. The ISO-import Java sources compile with Java 17, Android API 35, and the SDL3 Android classes JAR; compiled classes themselves are not published.

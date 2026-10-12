@@ -193,3 +193,13 @@ if(ANDROID AND SDL_ANDROID_ROOT AND GAME_DIR)
     target_link_libraries(main PRIVATE "-Wl,--start-group" doaxbv_game_core doaxbv_runtime_models doaxbv_android_backends "-Wl,--end-group" SDL3 doaxbv_gl_shaders GLESv3 log android mediandk m)
     target_link_options(main PRIVATE "-Wl,-z,max-page-size=16384" "-Wl,--no-undefined")
 endif()
+
+# Input mapping and real-GPU resize regression checks.
+add_executable(doaxbv_button_bindings_test native/button_bindings_test.cpp)
+if(ANDROID AND SDL_ANDROID_ROOT)
+    add_executable(doaxbv_live_display_test native/live_display_test.cpp)
+    target_include_directories(doaxbv_live_display_test PRIVATE "${RUNTIME}" "${CMAKE_CURRENT_SOURCE_DIR}/native" "${SDL_ANDROID_ROOT}/prefab/modules/SDL3-Headers/include")
+    target_compile_options(doaxbv_live_display_test PRIVATE -ffunction-sections -fdata-sections)
+    target_link_options(doaxbv_live_display_test PRIVATE -Wl,--gc-sections)
+    target_link_libraries(doaxbv_live_display_test PRIVATE EGL GLESv3)
+endif()

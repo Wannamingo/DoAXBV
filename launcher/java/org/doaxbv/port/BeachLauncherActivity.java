@@ -121,6 +121,9 @@ public final class BeachLauncherActivity extends Activity {
                 return saved;
             }catch(Exception invalid){return false;}
         }
+        @JavascriptInterface public void openControls(){runOnUiThread(()->{
+            if(!importing)startActivity(new Intent(BeachLauncherActivity.this,ControlMappingActivity.class));
+        });}
         @JavascriptInterface public void play(){runOnUiThread(()->{
             if(importing||!ready)return;
             try{startActivity(new Intent(BeachLauncherActivity.this,GameActivity.class));}

@@ -26,6 +26,9 @@ namespace {
 bool immediate;
 std::atomic<float> visible_fps{};
 std::atomic<uint64_t> fps_updated_ms{};
+// UI threads publish requests; all GL changes run on the presenter owner.
+std::atomic<unsigned> requested_display{},display_failure{};
+std::atomic<uint64_t> presented_frames{};
 struct Surface { GLuint color=0,fbo=0; unsigned width=0,height=0,pixel_width=0,pixel_height=0; };
 struct Depth { GLuint buffer=0; unsigned width=0,height=0,pixel_width=0,pixel_height=0; };
 struct Texture { GLuint name=0; uint64_t fingerprint=0; size_t bytes=0; };
@@ -81,6 +84,7 @@ struct RecompD3dPresenter {
     RecompD3dDepthState previous_depth{};RecompD3dBlendState previous_blend{};
     RecompD3dCullMode previous_cull{};bool depth_valid=false,blend_valid=false,cull_valid=false;
     unsigned render_scale=1;
+    unsigned rate_frames=0;
     double display_aspect=0.0;const char *display_profile="source";
     uint64_t target_bytes=0,texture_bytes=0,frames=0,draws=0,declines=0,rate_start=0,draw_ticks=0,texture_ticks=0;bool border=false,closed=false;
     std::array<uint64_t,256> sampled{},unsupported{};
@@ -261,9 +265,55 @@ bool events(RecompD3dPresenter &p)
         if(e.type==SDL_EVENT_DID_ENTER_BACKGROUND){while(SDL_WaitEvent(&e)){if(e.type==SDL_EVENT_QUIT){p.closed=true;break;}if(e.type==SDL_EVENT_DID_ENTER_FOREGROUND)break;}}}
     return !p.closed;
 }
+bool resize_surfaces(RecompD3dPresenter &p,unsigned scale)
+{
+    struct Replacements {
+        Surface main;
+        std::vector<std::pair<uint32_t,Surface>> targets;
+        ~Replacements(){destroy(main);for(auto &entry:targets)destroy(entry.second);}
+    } next;
+    p.target_valid=p.depth_valid=p.blend_valid=p.cull_valid=false;
+    auto copy=[&](Surface &to,const Surface &from){
+        glActiveTexture(GL_TEXTURE0);
+        if(!surface(to,from.width,from.height,scale)||glGetError()!=GL_NO_ERROR)return false;
+        glBindFramebuffer(GL_READ_FRAMEBUFFER,from.fbo);glBindFramebuffer(GL_DRAW_FRAMEBUFFER,to.fbo);
+        glBlitFramebuffer(0,0,from.pixel_width,from.pixel_height,0,0,to.pixel_width,to.pixel_height,GL_COLOR_BUFFER_BIT,GL_LINEAR);
+        return glGetError()==GL_NO_ERROR;
+    };
+    try{
+        next.targets.reserve(p.targets.size());
+        if(!copy(next.main,p.main))return false;
+        for(auto &entry:p.targets){
+            next.targets.emplace_back(entry.first,Surface{});
+            if(!copy(next.targets.back().second,entry.second))return false;
+        }
+    }catch(const std::bad_alloc &){return false;}
+    // Commit only after every color target has been allocated and copied.
+    // Depth is regenerated on the next frame; guest state and textures survive.
+    destroy(p.main);p.main=next.main;next.main={};p.target_bytes=0;
+    for(auto &entry:next.targets){Surface &previous=p.targets.at(entry.first);destroy(previous);previous=entry.second;entry.second={};p.target_bytes+=uint64_t(previous.pixel_width)*previous.pixel_height*4;}
+    for(auto &entry:p.depths)glDeleteRenderbuffers(1,&entry.second.buffer);p.depths.clear();
+    destroy(p.feedback);p.current=nullptr;p.render_scale=scale;return true;
+}
+void display_settings(RecompD3dPresenter &p)
+{
+    unsigned request=requested_display.exchange(0,std::memory_order_acq_rel);if(!request)return;
+    unsigned scale=request&3,aspect=request>>2;
+    bool okay=scale==p.render_scale||resize_surfaces(p,scale);
+    p.display_aspect=aspect==2?16.0/9.0:aspect==1?4.0/3.0:0.0;
+    p.display_profile=aspect==2?"16:9":aspect==1?"4:3":"source";
+    p.rate_start=SDL_GetPerformanceCounter();p.rate_frames=0;p.draw_ticks=p.texture_ticks=0;
+    if(!okay){
+        // A failed allocation leaves the old targets intact and play can resume.
+        while(glGetError()!=GL_NO_ERROR){}
+        display_failure.store(p.render_scale|(aspect<<2),std::memory_order_release);
+        std::fprintf(stderr,"Android live resolution failed requested=%u retained=%u\n",scale,p.render_scale);
+    }else std::fprintf(stderr,"Android live display resolution=%ux%u scale=%u aspect=%s frame=%llu\n",p.main.pixel_width,p.main.pixel_height,p.render_scale,p.display_profile,(unsigned long long)p.frames);
+}
 RecompD3dPresenterError present(RecompD3dPresenter &p)
 {
     if(!events(p))return RECOMP_D3D_PRESENTER_CLOSED;
+    display_settings(p);
     int width=0,height=0;if(!SDL_GetWindowSizeInPixels(p.window,&width,&height))return RECOMP_D3D_PRESENTER_HOST_FAILURE;
     p.target_valid=p.depth_valid=p.blend_valid=p.cull_valid=false;glBindFramebuffer(GL_FRAMEBUFFER,0);glDisable(GL_DEPTH_TEST);glDisable(GL_STENCIL_TEST);glDisable(GL_CULL_FACE);glDisable(GL_BLEND);glColorMask(1,1,1,1);glClearColor(0,0,0,1);glClear(GL_COLOR_BUFFER_BIT);
     // Fit the complete guest image to the chosen presentation aspect. Guest
@@ -272,12 +322,13 @@ RecompD3dPresenterError present(RecompD3dPresenter &p)
     double scale=std::min(double(width)/display_width,double(height)/p.main.height);int w=int(display_width*scale),h=int(p.main.height*scale);glViewport((width-w)/2,(height-h)/2,w,h);
     if(p.frames==0)std::fprintf(stderr,"Android presentation viewport=%d,%d,%d,%d screen=%dx%d aspect=%s\n",(width-w)/2,(height-h)/2,w,h,width,height,p.display_profile);
     glUseProgram(p.blit);glBindVertexArray(p.vao);glActiveTexture(GL_TEXTURE0);glBindTexture(GL_TEXTURE_2D,p.main.color);glActiveTexture(GL_TEXTURE1);glBindTexture(GL_TEXTURE_2D,p.gamma);glDrawArrays(GL_TRIANGLES,0,3);
-    if(!SDL_GL_SwapWindow(p.window))return RECOMP_D3D_PRESENTER_HOST_FAILURE;++p.frames;
+    if(!SDL_GL_SwapWindow(p.window))return RECOMP_D3D_PRESENTER_HOST_FAILURE;++p.frames;presented_frames.store(p.frames,std::memory_order_release);
     const uint64_t now=SDL_GetPerformanceCounter();
     if(!p.rate_start)p.rate_start=now;
-    if(p.frames%60==0){double seconds=double(now-p.rate_start)/SDL_GetPerformanceFrequency();visible_fps.store(float(60/seconds),std::memory_order_relaxed);fps_updated_ms.store(SDL_GetTicks(),std::memory_order_relaxed);std::fprintf(stderr,"GLES performance fps=%.2f draw_ms=%.2f texture_ms=%.2f\n",60/seconds,p.draw_ticks*1000.0/SDL_GetPerformanceFrequency()/60,p.texture_ticks*1000.0/SDL_GetPerformanceFrequency()/60);p.rate_start=now;p.draw_ticks=p.texture_ticks=0;}
-    if(p.adreno && p.frames%60==0){double factor=1000.0/SDL_GetPerformanceFrequency()/60;std::fprintf(stderr,"Adreno phases uniform_ms=%.2f vertex_ms=%.2f index_ms=%.2f issue_ms=%.2f index_hits=%llu index_uploads=%llu\n",p.uniform_ticks*factor,p.vertex_ticks*factor,p.index_ticks*factor,p.issue_ticks*factor,(unsigned long long)p.index_cache.hits,(unsigned long long)p.index_cache.uploads);p.uniform_ticks=p.vertex_ticks=p.index_ticks=p.issue_ticks=0;}
-    if(p.adreno && p.frames%60==0)std::fprintf(stderr,"Adreno vertices hits=%llu uploads=%llu\n",(unsigned long long)p.vertex_cache.hits,(unsigned long long)p.vertex_cache.uploads);
+    bool report=++p.rate_frames==60;
+    if(report){double seconds=double(now-p.rate_start)/SDL_GetPerformanceFrequency();visible_fps.store(float(60/seconds),std::memory_order_relaxed);fps_updated_ms.store(SDL_GetTicks(),std::memory_order_relaxed);std::fprintf(stderr,"GLES performance fps=%.2f draw_ms=%.2f texture_ms=%.2f\n",60/seconds,p.draw_ticks*1000.0/SDL_GetPerformanceFrequency()/60,p.texture_ticks*1000.0/SDL_GetPerformanceFrequency()/60);p.rate_start=now;p.rate_frames=0;p.draw_ticks=p.texture_ticks=0;}
+    if(p.adreno && report){double factor=1000.0/SDL_GetPerformanceFrequency()/60;std::fprintf(stderr,"Adreno phases uniform_ms=%.2f vertex_ms=%.2f index_ms=%.2f issue_ms=%.2f index_hits=%llu index_uploads=%llu\n",p.uniform_ticks*factor,p.vertex_ticks*factor,p.index_ticks*factor,p.issue_ticks*factor,(unsigned long long)p.index_cache.hits,(unsigned long long)p.index_cache.uploads);p.uniform_ticks=p.vertex_ticks=p.index_ticks=p.issue_ticks=0;}
+    if(p.adreno && report)std::fprintf(stderr,"Adreno vertices hits=%llu uploads=%llu\n",(unsigned long long)p.vertex_cache.hits,(unsigned long long)p.vertex_cache.uploads);
     if(p.frames%300==0)std::fprintf(stderr,"GLES frames=%llu draws=%llu declines=%llu textures=%zu\n",(unsigned long long)p.frames,(unsigned long long)p.draws,(unsigned long long)p.declines,p.textures.size());return glGetError()==GL_NO_ERROR ? RECOMP_D3D_PRESENTER_OK:RECOMP_D3D_PRESENTER_HOST_FAILURE;
 }
 }
@@ -288,7 +339,7 @@ extern "C" RecompD3dPresenterError recomp_d3d_presenter_create(const RecompD3dPr
     const char *aspect=std::getenv("RECOMP_DISPLAY_ASPECT");
     if(aspect && !std::strcmp(aspect,"4:3")){p->display_aspect=4.0/3.0;p->display_profile="4:3";}
     else if(aspect && !std::strcmp(aspect,"16:9")){p->display_aspect=16.0/9.0;p->display_profile="16:9";}
-    const char *resolution=std::getenv("RECOMP_RENDER_SCALE");p->render_scale=resolution&&!std::strcmp(resolution,"2") ? 2:1;
+    const char *resolution=std::getenv("RECOMP_RENDER_SCALE");p->render_scale=resolution&&!std::strcmp(resolution,"3") ? 3:resolution&&!std::strcmp(resolution,"2") ? 2:1;
     if(!SDL_Init(SDL_INIT_VIDEO))return RECOMP_D3D_PRESENTER_HOST_FAILURE;
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,SDL_GL_CONTEXT_PROFILE_ES);SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION,3);SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION,0);SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER,1);
     p->window=SDL_CreateWindow("Dead or Alive Xtreme Beach Volleyball",config->width,config->height,SDL_WINDOW_OPENGL|SDL_WINDOW_FULLSCREEN|SDL_WINDOW_HIGH_PIXEL_DENSITY);
@@ -334,3 +385,9 @@ extern "C" RecompD3dPresenterError recomp_d3d_presenter_destroy(RecompD3dPresent
 extern "C" void recomp_d3d_presenter_set_immediate_present(bool enabled){immediate=enabled;}
 extern "C" float recomp_android_presenter_fps(void){return SDL_GetTicks()-fps_updated_ms.load(std::memory_order_relaxed)>2500 ? 0.f:visible_fps.load(std::memory_order_relaxed);}
 extern "C" void recomp_d3d_presenter_report_draw_textures(void){std::fprintf(stderr,"Android GLES texture counters are reported per presenter frame batch\n");}
+
+extern "C" void recomp_android_display_settings(unsigned scale,unsigned aspect){if(scale>=1&&scale<=3&&aspect<=2)requested_display.store(scale|(aspect<<2),std::memory_order_release);}
+
+extern "C" unsigned recomp_android_consume_display_failure(void){return display_failure.exchange(0,std::memory_order_acq_rel);}
+
+extern "C" uint64_t recomp_android_presented_frames(void){return presented_frames.load(std::memory_order_acquire);}

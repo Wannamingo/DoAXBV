@@ -26,6 +26,8 @@ int main(int argc,char **argv)
         else if(!std::strcmp(argv[i],"--android-language=ru"))setenv("RECOMP_LANGUAGE","ru",1);
         else if(!std::strcmp(argv[i],"--android-swap-buttons"))setenv("RECOMP_FACE_SWAP","1",1);
         else if(!std::strcmp(argv[i],"--android-resolution=2"))setenv("RECOMP_RENDER_SCALE","2",1);
+        else if(!std::strcmp(argv[i],"--android-resolution=1"))setenv("RECOMP_RENDER_SCALE","1",1);
+        else if(!std::strcmp(argv[i],"--android-resolution=3"))setenv("RECOMP_RENDER_SCALE","3",1);
         else game_args.push_back(argv[i]);
     }
     const int game_argc=(int)game_args.size();game_args.push_back(nullptr);

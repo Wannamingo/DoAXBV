@@ -33,16 +33,17 @@
    </div>
   </section>
  </main>
- <footer><span>DEAD OR ALIVE <span class="footer-divider">/</span> <span data-i18n="footer">ПЛЯЖ. ВОЛЕЙБОЛ. ЛЕТО.</span></span><span class="version">USA6 <span class="footer-divider">·</span> 0.4.1</span></footer>
+ <footer><span>DEAD OR ALIVE <span class="footer-divider">/</span> <span data-i18n="footer">ПЛЯЖ. ВОЛЕЙБОЛ. ЛЕТО.</span></span><span class="version">USA6 <span class="footer-divider">·</span> 0.4.2</span></footer>
 </div>
 <div id="settingsOverlay" class="overlay" hidden>
  <section class="dialog settings-dialog" role="dialog" aria-modal="true" aria-labelledby="settingsTitle" tabindex="-1">
   <div class="dialog-header"><div><span class="overline" data-i18n="preferences">ТВОЯ ИГРА</span><h1 id="settingsTitle" data-i18n="settings">Настройки</h1></div><button id="settingsClose" class="close-button" aria-label="Закрыть">×</button></div>
   <div class="settings-scroll">
    <label class="field"><span><strong data-i18n="aspect">Формат экрана</strong><small data-i18n="aspectHint">Пропорции игрового изображения</small></span><select id="displayAspect"><option value="source" data-i18n="original">Исходные пропорции</option><option value="4:3">4:3</option><option value="16:9">16:9</option></select></label>
-   <label class="field"><span><strong data-i18n="resolution">Внутреннее разрешение</strong><small data-i18n="resolutionHint">Качество отрисовки игры</small></span><select id="resolution"><option value="0" data-i18n="standard">Обычное · 720 × 480</option><option value="1" data-i18n="higher">Повышенное · 1440 × 960</option></select></label>
+   <label class="field"><span><strong data-i18n="resolution">Внутреннее разрешение</strong><small data-i18n="resolutionHint">Качество отрисовки игры</small></span><select id="resolution"><option value="0" data-i18n="standard">1× · 720 × 480</option><option value="1" data-i18n="higher">2× · 1440 × 960</option><option value="2" data-i18n="highest">3× · 2160 × 1440</option></select></label>
    <label class="field"><span><strong data-i18n="touch">Экранные кнопки</strong><small data-i18n="touchHint">В режиме «Авто» скрыты с геймпадом</small></span><select id="touchControls"><option value="0" data-i18n="auto">Авто</option><option value="1" data-i18n="show">Показывать</option><option value="2" data-i18n="hide">Скрывать</option></select></label>
    <label class="field switch-field"><span><strong data-i18n="swap">Поменять A/B и X/Y</strong><small data-i18n="swapHint">Перестановка кнопок на геймпаде</small></span><input id="swapButtons" type="checkbox" role="switch"><span class="switch-track" aria-hidden="true"><span></span></span></label>
+   <div class="field"><span><strong data-i18n="controls">Назначение кнопок</strong><small data-i18n="controlsHint">Экранное управление и геймпад</small></span><button id="controlsOpen" class="secondary-button" data-i18n="controls">Назначение кнопок</button></div>
    <label class="field"><span><strong data-i18n="language">Язык</strong><small data-i18n="languageHint">Интерфейс и язык при запуске игры</small></span><select id="language"><option value="ru">Русский</option><option value="en">English</option></select></label>
   </div>
   <div class="dialog-bottom"><span id="saveState"><span class="saved-check">✓</span> <span data-i18n="saved">Настройки сохранены</span></span><button id="settingsDone" class="done-button" data-i18n="done">Готово</button></div>

@@ -1,4 +1,50 @@
-# Publication verification / Проверка публикации
+# Verification / Проверка
+
+## 0.4.2 build and automated checks
+
+- Full ARM64 native rebuild with NDK r30, with the pinned USA5 recipe, generated
+  file hashes, manifest hash, and existing EBP override checks enabled.
+- Public Android CMake configured without GAME_DIR or original-game inputs.
+- Both Java layers compiled together with Java 17/API 35 and converted with D8.
+- Touch model tests: four viewports, eight directions, two sticks, multitouch,
+  sliding release, remapping, normalized layout persistence, reset and cancel.
+- Preference tests: independent touch/gamepad bindings, swap compatibility,
+  invalid values, resets, and isolation of layout preferences.
+- Native binding test executed on RG477M: simultaneous inputs, remapping cycles,
+  shared actions, pressure, disabled actions, thresholds, and stick directions.
+- Real GLES test executed on RG477M: repeated 1×/2×/3× changes preserve main and
+  offscreen pixels; failed allocation retains the original targets.
+- Beach preview: all three resolutions, mapping bridge, RU/EN, and import lock.
+- APK ZIP, JNI exports, matching previous signing certificate, and 16 KiB alignment.
+- The installed APK hash matches the local release APK. USA ZIP import and game
+  startup were exercised on RG477M.
+
+## 0.4.2 device checks: RG477M
+
+Verified on 12 October 2026, GammaOS / Android 14, Mali-G615, 1280 × 960:
+
+- The installed release APK has SHA-256
+  `499cdb418004d1d568fcb144c7cc29d5ef9b4237239992720fc15b88d786b6b5`.
+- In-game settings applied 2× → 3× → 1× → 2× and source → 16:9 → source.
+  Native logs confirm all sizes; the game process remained the same.
+- The pencil editor and the settings-to-editor path retained a rendered game
+  frame. Dragging A and saving persisted its normalized position across a game
+  restart. Cancel retained the saved position; Reset + Save restored defaults.
+- A touch A → app menu assignment and an independent physical B → app menu
+  assignment both worked without restarting the game. Both layouts were reset
+  afterwards. Select also opened the menu with the touch controls hidden.
+- Both physical and touch left sticks moved selection in the original game's
+  menus.
+- Exiting through the app menu returned to Beach; another game launch succeeded.
+- All six pre-update save files remained byte-for-byte identical. Original
+  2× / source / Russian / automatic-touch settings were restored after testing.
+
+These checks do not establish a complete playthrough or performance on every
+Android device. The original upstream public-ci export/lifter checks remain
+unavailable in this supplied snapshot, as recorded below.
+
+## Historical publication checks: 0.4.1
+
 
 Verified on 11 October 2026 for this public source export:
 
